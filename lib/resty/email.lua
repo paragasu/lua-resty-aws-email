@@ -1,47 +1,54 @@
-local aws  = require 'auth'
-local http = require 'resty.http'
-
-local payload = {
-    ['Action'] = 'SendEmail',
-    ['Source'] = 'hello@roompillow.com',
-    ['Destination.ToAddresses.member.1'] ='paragasu@gmail.com',
-    ['Message.Subject.Data']   = 'Hello World',
-    ['Message.Body.Text.Data'] = 'Hello There'
-}
-
+local aws_auth = require 'aws_auth'
+local http = require 'requests'
+local email_from
 local config = {
-  aws_key     = 'AKIAJT6XHPLNMKTXJUJA',
-  aws_secret  = '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',
-  aws_host    = 'email.us-east-1.amazonaws.com',
-  aws_region  = 'us-east-1',
-  aws_service = 'ses',
-  request_body= payload
+  aws_service  = 'ses',  
+  aws_key      = nil,
+  aws_secret   = nil,
+  aws_region   = nil,
+  aws_host     = nil,
+  request_body = nil
 }
-local inspect = require 'inspect'
 
-aws:new(config)
+local _M  = {}
+local mt  = { __index = _M }
 
-local auth_header = aws:get_authorization_header()
-local amz_date_header = aws:get_date_header()
-
-print('Authorization: ' .. auth_header)
---print('Date: ' .. amz_date_header)
-
-local httpc = http:new()
-local res, err = httpc:request_uri('https://' .. config.aws_host, {
-  method = 'POST',
-  body = ngx.encode_args(payload),
-  ssl_verify = false,
-  headers = {
-    ['Content-Type'] = 'application/x-www-form-urlencoded',
-    ['Authorization'] = auth_header,
-    ['X-Amz-Date'] = amz_date_header 
-  }
-})
-
-if not res then
-  ngx.say('Failed request', err)
+-- init with table contain required information
+-- to generate authorization header
+-- aws_key, aws_secret and aws_region
+function _M.new(c)
+  email_from = c.email_from
+  config.aws_secret  = c.aws_secret
+  config.aws_region  = c.aws_region
+  config.aws_key     = c.aws_key
+  config.aws_host    = 'https://email.' .. c.aws_region .. '.amazonaws.com'
+  return setmetatable(_M, mt)
 end
 
-ngx.say(res.body)
+
+-- send email
+function _M.send(email_to, subject, message)
+  config.request_body = {
+    ['Action'] = 'SendEmail',
+    ['Source'] = email_from,
+    ['Destination.ToAddresses.member.1'] = email_to,
+    ['Message.Subject.Data']   = subject
+    ['Message.Body.Text.Data'] = message
+  }
+
+  local aws = aws_auth:new(config)
+  local response = http.post({
+    url = aws_host,
+    header = {
+      ['Content-Type'] = 'application/x-www-form-urlencoded', -- required
+      ['Authorization'] = aws:get_authorization_header(),
+      ['X-Amz-Date'] = aws:get_date_header()
+    }
+  })
+
+  local inspect = require 'inspect'
+  print(inspect(response))
+
+end
+
 ngx.say('SES done')
