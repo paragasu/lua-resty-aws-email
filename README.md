@@ -14,8 +14,8 @@ local aws_auth_config = {
   aws_region   = "us-east-1",  
 }
 
-local email = require 'resty.aws_email'
-local email = email:new(aws_auth_config)
+local ses = require 'resty.aws_email'
+local email = ses:new(aws_auth_config)
 local sent  = email:send('hello@world.com', 'hello there', 'Sent using AWS Simple Email Service API') 
 
 if not sent then
