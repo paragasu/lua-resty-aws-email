@@ -8,13 +8,15 @@ Send email using Amazon Simple Email Service(SES) API.
 
 # Usage
 ```lua
+local ses = require 'resty.aws_email'
+
+-- value from amazon simple email service dashboard
 local aws_auth_config = {
   aws_key = 'AKIDEXAMPLE',
   aws_secret   = "xxxsecret",
   aws_region   = "us-east-1",  
 }
 
-local ses = require 'resty.aws_email'
 local email = ses:new(aws_auth_config)
 local sent  = email:send('hello@world.com', 'hello there', 'Sent using AWS Simple Email Service API') 
 
