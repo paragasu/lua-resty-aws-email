@@ -16,7 +16,7 @@ local mt  = { __index = _M }
 -- init with table contain required information
 -- to generate authorization header
 -- aws_key, aws_secret and aws_region
-function _M.new(c)
+function _M.new(self, c)
   email_from = c.email_from
   config.aws_secret  = c.aws_secret
   config.aws_region  = c.aws_region
@@ -27,7 +27,7 @@ end
 
 
 -- send email
-function _M.send(email_to, subject, message)
+function _M.send(self, email_to, subject, message)
   config.request_body = {
     ['Action'] = 'SendEmail',
     ['Source'] = email_from,
