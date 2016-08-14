@@ -6,7 +6,7 @@ source = {
 }
 description = {
    summary  = "Lua resty module to send email using AWS Simple Email Service(SES)",
-   homepage = "https://github.com/paragasu/lua-resty-aws-auth",
+   homepage = "https://github.com/paragasu/lua-resty-aws-email",
    license  = "MIT",
    maintainer = "Jeffry L. <paragasu@gmail.com>"
 }
