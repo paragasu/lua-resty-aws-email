@@ -5,7 +5,6 @@
 
 local aws_auth = require 'resty.aws_auth'
 local request  = require 'requests'
-local http     = require 'resty.http'
 local email_from
 local config = {
   aws_service  = 'ses',  
