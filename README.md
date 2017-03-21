@@ -8,13 +8,13 @@ Send email using Amazon Simple Email Service(SES) API.
 
 # API
 
-*new(aws_email_config)*
+**new(aws_email_config)**
 - @param table with 
   - aws_key from aws dashboard
   - aws_secret from aws dashboard
   - aws_region aws_region is where the SES account created
 
-*send(email, subject, body)*
+**send(email, subject, body)**
 - @param email string recipient email
 - @param subject string email subject
 - @param body string email content
