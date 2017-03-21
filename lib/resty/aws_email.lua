@@ -22,6 +22,7 @@ local mt  = { __index = _M }
 -- to generate authorization header
 -- aws_key, aws_secret and aws_region
 function _M.new(self, c)
+  if not c then return ngx.log(ngx.ERR, 'Missing aws ses config') end
   email_from = c.email_from
   config.aws_secret  = c.aws_secret
   config.aws_region  = c.aws_region
