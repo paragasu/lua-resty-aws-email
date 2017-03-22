@@ -41,10 +41,10 @@ local inspect = require 'inspect'
 -- send email
 function _M:send(email_to, subject, message)
   if not email_to or not _M.check_valid_email(email_to) then 
-    error('Invalid email recipient: ' .. tostring(email_to)) 
+    return error('Invalid email recipient: ' .. tostring(email_to)) 
   end
-  if not subject then error('Missing required email subject') end
-  if not message then error('Missing required email message') end
+  if not subject then return error('Missing required email subject') end
+  if not message then return error('Missing required email message') end
   config.request_body = {
     ['Action'] = 'SendEmail',
     ['Source'] = tostring(email_from),
