@@ -39,6 +39,9 @@ end
 local inspect = require 'inspect'
 
 -- send email
+-- @param email_to string or array recipient email eg hello<hello@world.com> 
+--        for multiple email eg {"hello<hello@world.com>", "sumandak<sumandak@tamparuli.com>" }
+-- @return bool, info 
 function _M:send(email_to, subject, message)
   if not email_to or not _M.check_valid_email(email_to) then 
     return error('Invalid email recipient: ' .. tostring(email_to)) 
@@ -52,6 +55,10 @@ function _M:send(email_to, subject, message)
     ['Message.Subject.Data']   = subject,
     ['Message.Body.Text.Data'] = message
   }
+  -- configure recipien_email
+  if type(email_to) == 'table' then
+    _M.configure_multiple_recipient(email_to)  
+  end
 
   local aws = aws_auth:new(config)
   local res = request.post('https://' .. config.aws_host, {
@@ -76,8 +83,26 @@ function _M:send(email_to, subject, message)
 
 end
 
+-- set correct parameter for one or more email
+function _M.configure_multiple_recipient(email)
+  if type(email) ~= 'table' then return end
+  for k, v in ipairs(email) do
+    config.request_body['Destination.ToAddresses.member.' .. k] = tostring(v),
+  end
+end
+
 -- check for valid email
 function _M.check_valid_email(email)
+  if type(email) == 'string' then return _M.is_email(email) end
+  -- assume array
+  for k, v in pairs(email) do
+    if not _M.is_email(v) then return false end
+  end 
+  return true
+end
+
+-- check if the email's format is valid
+function _M.is_email(email)
   local valid = string.match(tostring(email), '^%w+@%w+[%.%w]+$')
   return valid == nil and false or true   
 end
