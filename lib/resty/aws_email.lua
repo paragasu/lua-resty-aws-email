@@ -3,6 +3,7 @@
 -- Website: github.com/paragasu/lua-resty-aws-email
 -- Licence: MIT
 
+local i = require 'inspect'
 local aws_auth = require 'resty.aws_auth'
 local request  = require 'requests'
 local email_from = ''
@@ -68,7 +69,9 @@ function _M:send(email_to, subject, message)
   if body.xml == 'SendEmailResponse' then
     return true, body[1][1][1]  -- send
   else
-    return false, body[1][3][1]  -- failed
+    local info = body[1][3][1]
+    ngx.log(ngx.ERR, 'Email sending failed: ' .. info,  i(config.request_body))
+    return false, info  -- failed
   end
 
 end
