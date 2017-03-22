@@ -72,7 +72,7 @@ end
 
 -- check for valid email
 function _M.check_valid_email(email)
-  local valid = string.match(email, '%w+@%w+[\.%w]+')
+  local valid = string.match(tostring(email), '^%w+@%w+[\.%w]+$')
   return valid == nil and false or true   
 end
 
