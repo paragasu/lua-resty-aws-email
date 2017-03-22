@@ -5,7 +5,7 @@
 
 local aws_auth = require 'resty.aws_auth'
 local request  = require 'requests'
-local email_from
+local email_from = ''
 local config = {
   aws_service  = 'ses',  
   aws_key      = nil,
@@ -26,6 +26,7 @@ function _M:new(c)
   if not c.aws_secret then return error('Missing required aws_secret') end
   if not c.aws_region then return error('Missing required aws_region') end
   if not c.aws_key then return error('Missing required aws_key') end
+  if not c.email_from then return error('Need to specify email_from') end
   email_from = c.email_from
   config.aws_secret  = c.aws_secret
   config.aws_region  = c.aws_region
@@ -45,8 +46,8 @@ function _M:send(email_to, subject, message)
   if not message then error('Missing required email message') end
   config.request_body = {
     ['Action'] = 'SendEmail',
-    ['Source'] = email_from,
-    ['Destination.ToAddresses.member.1'] = email_to,
+    ['Source'] = tostring(email_from),
+    ['Destination.ToAddresses.member.1'] = tostring(email_to),
     ['Message.Subject.Data']   = subject,
     ['Message.Body.Text.Data'] = message
   }
