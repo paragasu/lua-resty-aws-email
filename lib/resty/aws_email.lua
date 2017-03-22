@@ -47,7 +47,7 @@ function _M:send(email_to, subject, message)
   if not message then error('Missing required email message') end
   config.request_body = {
     ['Action'] = 'SendEmail',
-    ['Source'] = tostring(email_from),
+    ['Source'] = ngx.escape_uri(email_from),
     ['Destination.ToAddresses.member.1'] = tostring(email_to),
     ['Message.Subject.Data']   = subject,
     ['Message.Body.Text.Data'] = message
@@ -69,8 +69,9 @@ function _M:send(email_to, subject, message)
   if body.xml == 'SendEmailResponse' then
     return true, body[1][1][1]  -- send
   else
-    local info = body[1][3][1]
-    ngx.log(ngx.ERR, 'Email sending failed: ' .. info,  i(config.request_body))
+    local info  = body[1][3][1]
+    local param = ngx.encode_args(config.request_body)
+    ngx.log(ngx.ERR, 'Email sending failed: ' .. info,  i(param))
     return false, info  -- failed
   end
 
