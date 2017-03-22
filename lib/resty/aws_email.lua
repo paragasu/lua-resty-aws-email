@@ -87,7 +87,7 @@ end
 function _M.configure_multiple_recipient(email)
   if type(email) ~= 'table' then return end
   for k, v in ipairs(email) do
-    config.request_body['Destination.ToAddresses.member.' .. k] = tostring(v),
+    config.request_body['Destination.ToAddresses.member.' .. k] = tostring(v)
   end
 end
 
