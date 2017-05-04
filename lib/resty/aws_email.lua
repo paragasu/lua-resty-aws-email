@@ -5,7 +5,8 @@
 
 local i = require 'inspect'
 local aws_auth = require 'resty.aws_auth'
-local request  = require 'requests'
+local http     = require 'resty.http'
+local xml      = require 'xml'
 local email_from = ''
 local config = {
   aws_service  = 'ses',  
@@ -36,7 +37,6 @@ function _M:new(c)
   return setmetatable(_M, mt)
 end
 
-local inspect = require 'inspect'
 
 -- send email
 -- @param email_to string or array recipient email eg hello<hello@world.com> 
@@ -60,27 +60,30 @@ function _M:send(email_to, subject, message)
     _M.configure_multiple_recipient(email_to)  
   end
 
-  local aws = aws_auth:new(config)
-  local res = request.post('https://' .. config.aws_host, {
-    data = ngx.encode_args(config.request_body),
+  local aws   = aws_auth:new(config)
+  local httpc = http.new()
+  local res, err = httpc:request_uri('https://' .. config.aws_host, {
+    method = 'POST',
+    body   = ngx.encode_args(config.request_body),
     headers = {
       ['Content-Type'] = 'application/x-www-form-urlencoded', -- required
       ['Authorization'] = aws:get_authorization_header(),
       ['X-Amz-Date'] = aws:get_date_header()
     }
-  })
+  }) 
 
-  local body, err = res.xml() 
-  local result = body.xml
-
-  if body.xml == 'SendEmailResponse' then
-    return true, body[1][1][1]  -- send
+  if not res then
+    return false, err
   else
-    local info  = body[1][3][1]
-    ngx.log(ngx.ERR, 'Email sending failed: ' .. info,  i(config.request_body))
-    return false, info  -- failed
-  end
-
+    local body = xml.load(res.body)     
+    if body.xml == 'SendEmailResponse' then
+      return true, body[1][1][1]  -- send
+    else
+      local info  = body[1][3][1]
+      ngx.log(ngx.ERR, 'Email sending failed: ' .. info,  i(config.request_body))
+      return false, info  -- failed
+    end
+  end 
 end
 
 -- set correct parameter for one or more email

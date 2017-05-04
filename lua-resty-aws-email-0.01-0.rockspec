@@ -1,8 +1,8 @@
 package = "lua-resty-aws-email"
-version = "0.01-0"
+version = "0.11-0"
 source = {
    url = "git://github.com/paragasu/lua-resty-aws-email",
-   tag = "v0.01-0"
+   tag = "v0.11-0"
 }
 description = {
    summary  = "Lua resty module to send email using AWS Simple Email Service(SES)",
@@ -12,7 +12,8 @@ description = {
 }
 dependencies = {
    "lua >= 5.1",
-   "lua-requests",
+   "xml",
+   "lua-resty-http",
    "lua-resty-aws-auth"
 }
 build = {
