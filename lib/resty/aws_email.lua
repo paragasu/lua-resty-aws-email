@@ -34,7 +34,7 @@ function _M:new(c)
   config.aws_region = c.aws_region
   config.aws_key  = c.aws_key
   config.aws_host = 'email.' .. c.aws_region .. '.amazonaws.com'
-  config.is_html = false,
+  config.is_html = false
   return setmetatable(_M, mt)
 end
 
@@ -71,7 +71,7 @@ end
 function _M.send(self, email_to, subject, message)
   if not subject then return nil, 'Missing required email subject' end
   if not message then return nil, 'Missing required email message' end
-  if not email_to or not self:check_valid_email(email_to) then return nil, 'Invalid email recipient: ' .. tostring(email_to) end
+  if not email_to or not self:is_valid_destination(email_to) then return nil, 'Invalid email recipient: ' .. tostring(email_to) end
 
   config.request_body = {
     ['Action'] = 'SendEmail',
@@ -98,17 +98,18 @@ function _M.set_destination(email)
       config.request_body['Destination.ToAddresses.member.' .. k] = tostring(v)
     end
   else
-    config.request_body['Destination.ToAddresses.member.1'] = tostring(email),
+    config.request_body['Destination.ToAddresses.member.1'] = tostring(email)
   end
 end
 
 function _M.is_email(email)
-  return string.match(tostring(email), '^%w+@%w+[%.%w]+$') == nil
+  return string.match(tostring(email), '^[%w%.]+@%w+%.[%w%.]+$') ~= nil
 end
 
-function _M.check_valid_email(self, email)
+function _M.is_valid_destination(self, email)
+  if not email then return false end 
   if type(email) == 'string' then return self.is_email(email) end
-  for k, v in ipairs(email) do 
+  for k, v in pairs(email) do 
     if not self.is_email(v) then return false end 
   end 
   return true
