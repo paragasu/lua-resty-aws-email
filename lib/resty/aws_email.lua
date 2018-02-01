@@ -30,36 +30,19 @@ function _M:new(c)
   if not c.aws_key then return error('Missing required aws_key') end
   if not c.email_from then return error('Need to specify email_from') end
   email_from = c.email_from
-  config.aws_secret  = c.aws_secret
-  config.aws_region  = c.aws_region
-  config.aws_key     = c.aws_key
-  config.aws_host    = 'email.' .. c.aws_region .. '.amazonaws.com'
+  config.aws_secret = c.aws_secret
+  config.aws_region = c.aws_region
+  config.aws_key  = c.aws_key
+  config.aws_host = 'email.' .. c.aws_region .. '.amazonaws.com'
+  config.is_html = false,
   return setmetatable(_M, mt)
 end
 
+function _M.set_html()
+  config.is_html = true
+end
 
--- send email
--- @param email_to string or array recipient email eg hello<hello@world.com> 
---        for multiple email eg {"hello<hello@world.com>", "sumandak<sumandak@tamparuli.com>" }
--- @return bool, info 
-function _M:send(email_to, subject, message)
-  if not email_to or not _M.check_valid_email(email_to) then 
-    return error('Invalid email recipient: ' .. tostring(email_to)) 
-  end
-  if not subject then return error('Missing required email subject') end
-  if not message then return error('Missing required email message') end
-  config.request_body = {
-    ['Action'] = 'SendEmail',
-    ['Source'] = tostring(email_from),
-    ['Destination.ToAddresses.member.1'] = tostring(email_to),
-    ['Message.Subject.Data']   = subject,
-    ['Message.Body.Text.Data'] = message
-  }
-  -- configure recipien_email
-  if type(email_to) == 'table' then
-    _M.configure_multiple_recipient(email_to)  
-  end
-
+function _M.request()
   local aws   = aws_auth:new(config)
   local httpc = http.new()
   local res, err = httpc:request_uri('https://' .. config.aws_host, {
@@ -72,42 +55,63 @@ function _M:send(email_to, subject, message)
     }
   }) 
 
-  if not res then
-    return false, err
+  if not res then return nil, err end
+  local body = xml.load(res.body)     
+  if body.xml == 'SendEmailResponse' then
+    return body[1][1][1]  -- success 
   else
-    local body = xml.load(res.body)     
-    if body.xml == 'SendEmailResponse' then
-      return true, body[1][1][1]  -- send
-    else
-      local info  = body[1][3][1]
-      ngx.log(ngx.ERR, 'Email sending failed: ' .. info,  i(config.request_body))
-      return false, info  -- failed
-    end
-  end 
-end
-
--- set correct parameter for one or more email
-function _M.configure_multiple_recipient(email)
-  if type(email) ~= 'table' then return end
-  for k, v in ipairs(email) do
-    config.request_body['Destination.ToAddresses.member.' .. k] = tostring(v)
+    return nil, body[1][3][1] -- failed
   end
 end
 
--- check for valid email
-function _M.check_valid_email(email)
-  if type(email) == 'string' then return _M.is_email(email) end
-  -- assume array
-  for k, v in pairs(email) do
-    if not _M.is_email(v) then return false end
-  end 
-  return true
+-- send email
+-- @param email_to string or array recipient email eg hello<hello@world.com> 
+--        for multiple email eg {"hello<hello@world.com>", "sumandak<sumandak@tamparuli.com>" }
+-- @return res, err 
+function _M.send(self, email_to, subject, message)
+  if not subject then return nil, 'Missing required email subject' end
+  if not message then return nil, 'Missing required email message' end
+  if not email_to or not self:check_valid_email(email_to) then return nil, 'Invalid email recipient: ' .. tostring(email_to) end
+
+  config.request_body = {
+    ['Action'] = 'SendEmail',
+    ['Source'] = tostring(email_from),
+    ['Message.Subject.Data'] = subject
+  }
+
+  self.set_destination(email_to)
+  self.set_message(message)
+  return self.request()
 end
 
--- check if the email's format is valid
+function _M.set_message(message)
+  if config.is_html == true then
+    config.request_body['Message.Body.Html.Data'] = message
+  else
+    config.request_body['Message.Body.Text.Data'] = message
+  end
+end
+
+function _M.set_destination(email)
+  if type(email) == 'table' then
+    for k, v in ipairs(email) do
+      config.request_body['Destination.ToAddresses.member.' .. k] = tostring(v)
+    end
+  else
+    config.request_body['Destination.ToAddresses.member.1'] = tostring(email),
+  end
+end
+
 function _M.is_email(email)
-  local valid = string.match(tostring(email), '^%w+@%w+[%.%w]+$')
-  return valid == nil and false or true   
+  return string.match(tostring(email), '^%w+@%w+[%.%w]+$') == nil
+end
+
+function _M.check_valid_email(self, email)
+  if type(email) == 'string' then return self.is_email(email) end
+  for k, v in ipairs(email) do 
+    if not self.is_email(v) then return false end 
+  end 
+  return true
 end
 
 return _M
