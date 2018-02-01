@@ -14,7 +14,7 @@ Send email using Amazon Simple Email Service(SES) API.
   - aws_secret from aws dashboard
   - aws_region aws_region is where the SES account created
 
-**.set_html(bool)**
+**.set_html(bool)**  
 send email as html otherwise send as text
 - @param boolean
 
