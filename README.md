@@ -14,7 +14,7 @@ Send email using Amazon Simple Email Service(SES) API.
   - aws_secret from aws dashboard
   - aws_region aws_region is where the SES account created
 
-**:send(email, subject, body)** 
+**:send(email, subject, body)**  
 send email body as text
 - @param email string recipient email
 - @param subject string email subject
