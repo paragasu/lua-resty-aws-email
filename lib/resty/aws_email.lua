@@ -38,16 +38,13 @@ function _M:new(c)
   return setmetatable(_M, mt)
 end
 
-function _M.set_html()
-  config.is_html = true
-end
-
 function _M.request()
   local aws   = aws_auth:new(config)
   local httpc = http.new()
   local res, err = httpc:request_uri('https://' .. config.aws_host, {
     method = 'POST',
-    body   = ngx.encode_args(config.request_body),
+    body = ngx.encode_args(config.request_body),
+    ssl_verify = false,
     headers = {
       ['Content-Type'] = 'application/x-www-form-urlencoded', -- required
       ['Authorization'] = aws:get_authorization_header(),
@@ -82,6 +79,11 @@ function _M.send(self, email_to, subject, message)
   self.set_destination(email_to)
   self.set_message(message)
   return self.request()
+end
+
+function _M.send_html(self, email_to, subject, message)
+  self.set_html_message()
+  self:send(email_to, subject, message)
 end
 
 function _M.set_message(message)
