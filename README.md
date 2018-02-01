@@ -8,17 +8,17 @@ Send email using Amazon Simple Email Service(SES) API.
 
 # API
 
-**new(aws_email_config)**
+**:new(aws_email_config)**
 - @param table with 
   - aws_key from aws dashboard
   - aws_secret from aws dashboard
   - aws_region aws_region is where the SES account created
 
-**set_html(bool)**
+**.set_html(bool)**
 send email as html otherwise send as text
 - @param boolean
 
-**send(email, subject, body)**
+**:send(email, subject, body)**
 - @param email string recipient email
 - @param subject string email subject
 - @param body string email content
@@ -38,7 +38,7 @@ local email = ses:new(aws_auth_config)
 local res, err = email:send('hello@world.com', 'hello there', 'Sent using AWS Simple Email Service API') 
 
 if not sent then
-  ngx.say('Failed: ' .. info)
+  ngx.say('Failed: ' .. err)
 else
   ngx.say('Sent')
 ```
