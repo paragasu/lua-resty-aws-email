@@ -82,8 +82,8 @@ function _M.send(self, email_to, subject, message)
 end
 
 function _M.send_html(self, email_to, subject, message)
-  self.set_html_message()
-  self:send(email_to, subject, message)
+  config.is_html = true
+  return self:send(email_to, subject, message)
 end
 
 function _M.set_message(message)
