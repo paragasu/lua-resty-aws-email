@@ -15,12 +15,12 @@ Send email using Amazon Simple Email Service(SES) API.
   - aws_region aws_region is where the SES account created
 
 **:send(email, subject, body)**  
-send email body as text
+Send email body as text
 - @param email string recipient email
 - @param subject string email subject
 - @param body string email content
 
-**:send_html(email, subject, body)** 
+**:send_html(email, subject, body)**  
 send email body as html
 - @param email string recipient email
 - @param subject string email subject
