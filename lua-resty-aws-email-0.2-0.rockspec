@@ -14,7 +14,8 @@ dependencies = {
    "lua >= 5.1",
    "xml",
    "lua-resty-http",
-   "lua-resty-aws-auth"
+   "lua-resty-aws-auth",
+   "cjson"
 }
 build = {
    type = "builtin",
