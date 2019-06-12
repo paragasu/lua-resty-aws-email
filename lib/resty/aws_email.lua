@@ -7,6 +7,7 @@ local i = require 'inspect'
 local aws_auth = require 'resty.aws_auth'
 local http     = require 'resty.http'
 local xml      = require 'xml'
+local cjson     = require 'cjson'
 local email_from = ''
 local config = {
   aws_service  = 'ses',  
@@ -53,12 +54,33 @@ function _M.request()
   }) 
 
   if not res then return nil, err end
-  local body = xml.load(res.body)     
+  local body = xml.load(res.body)
   if body.xml == 'SendEmailResponse' then
+    return body[1][1][1]  -- success 
+  elseif body.xml == 'SendTemplatedEmailResponse' then
     return body[1][1][1]  -- success 
   else
     return nil, body[1][3][1] -- failed
   end
+end
+
+-- send templated email
+-- @param email_to string or array recipient email eg hello<hello@world.com>
+--        for multiple email eg {"hello<hello@world.com>", "sumandak<sumandak@tamparuli.com>" }
+-- @return res, err
+function _M.send_templated(self, email_to, template, data)
+  if not template then return nil, 'Missing required email template' end
+  if not data then return nil, 'Missing required template data' end
+  if not email_to or not self:is_valid_destination(email_to) then return nil, 'Invalid email recipient: ' .. tostring(email_to) end
+
+  config.request_body = {
+    ['Action'] = 'SendTemplatedEmail',
+    ['Source'] = tostring(email_from)
+  }
+
+  self.set_template(template, data)
+  self.set_destination(email_to)
+  return self.request()
 end
 
 -- send email
@@ -101,6 +123,15 @@ function _M.set_destination(email)
     end
   else
     config.request_body['Destination.ToAddresses.member.1'] = tostring(email)
+  end
+end
+
+function _M.set_template(template, data)
+  config.request_body['Template'] = tostring(template)
+  if (type(data) == "table") then
+    config.request_body['TemplateData'] = cjson.encode(data)
+  else
+    config.request_body['TemplateData'] = tostring(data)
   end
 end
 
